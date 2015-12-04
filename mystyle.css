@@ -1,0 +1,12 @@
+body {
+    background-image: url("colorfulBG.jpg");
+    background-size: 100% 100%;
+}
+svg {
+    border:1px solid #ccc;
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	margin-top: -300px;
+	margin-left: -300px;
+}
