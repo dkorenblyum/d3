@@ -2,23 +2,55 @@ var createEnemies = function(n){
      return _.range(0,n).map(function(i){
         return{
             "id" : 'a' + i,
-            "cx" : Math.random() * 600,
-            "cy" :Math.random() * 600
+            "x" : Math.random() * 600,
+            "y" :Math.random() * 600
         }
     });
 
 };
 
+var gameStats = {
+    score: 0,
+    bestScore: 0
+};
+
+var updateScore = function() {
+    return d3.select('#current-score').text(gameStats.score.toString());
+};
+
+var updateBestScore = function() {
+    gameStats.bestScore = _.max([gameStats.bestScore, gameStats.score]);
+    return d3.select('#best-score').text(gameStats.bestScore.toString());
+};
+
+var onCollision = function() {
+    updateBestScore();
+    gameStats.score = 0;
+    return updateScore();
+};
+
 function myTransf(id) {
-    // console.log('id: ', id);
     d3.selectAll("#"+id).transition().duration(1500).tween("text", function(d) {
-       var x = D3_hero.attr('cx');
-       var y = D3_hero.attr('cy');
-       console.log(x,y);
-        // return d.id
+            return function(t) {
+                var goodGuy = D3_hero;
+                var badGuy = d3.select(this);
+                var radiusSum;
+                var separation;
+                var xDiff;
+                var yDiff;
+                radiusSum = parseFloat(badGuy.attr("width")) + parseFloat(goodGuy.attr("r"));
+                xDiff = parseFloat(badGuy.attr('x')) - parseFloat(goodGuy.attr("cx"));
+                yDiff = parseFloat(badGuy.attr('y')) - parseFloat(goodGuy.attr("cy"));
+                separation = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
+
+                if (separation < radiusSum) {
+                    console.log('collision: ', badGuy.attr('id'));
+                    onCollision();
+                }
+            }
     })
-        .attr("cx", Math.random() * 600) // change this to random 2px 
-        .attr("cy", Math.random() * 600) // change this to random 2px
+        .attr("x", Math.random() * 600) // change this to random 2px 
+        .attr("y", Math.random() * 600) // change this to random 2px
         .each("end", function () {
         myTransf(id);
     });
@@ -36,21 +68,34 @@ var enemyArray = createEnemies(30);
 var D3_enemies = D3_bodySelection.selectAll("svg")
     .data(enemyArray)
     .enter()
-    .append("circle")
+    .append("image")
+    .attr("xlink:href", 'http://vignette2.wikia.nocookie.net/ninjutsu-weapons/images/a/ac/Shuriken.png/revision/latest?cb=20130622150254')
+    .attr("width", 30)
+    .attr("height", 30)
+    .attr("class","shurukin")
     .attr("id", function(d) {
         return d.id;
     })
-    .attr("cx", function(d) {
-        return d.cx;
+    .attr("x", function(d) {
+        return d.x;
     })
-    .attr("cy", function(d) {
-        return d.cy;
+    .attr("y", function(d) {
+        return d.y;
     })
-    .attr("r", 5 + "px")
-    .attr("fill","blue")
-    .transition().each("end", function (d) {
+    // .attr("r", 5)
+    // .attr("fill","blue")
+    // .call(function(d) {
+    //     myTransf(d.attr("id"));
+
+    // })
+    .transition().tween("end", function (d) {
+        // console.log(d.id);
              myTransf(d.id);
     });
+
+    // .transition().each("end", function (d) {
+    //          myTransf(d.id);
+    // });
 // });
 
 var drag = d3.behavior.drag()  
@@ -67,34 +112,12 @@ D3_hero = D3_bodySelection.selectAll("svg")
     .attr("id", "hero")
     .attr("cx", 10) 
     .attr("cy", 10)
-    .attr("r", 10 + "px")
+    .attr("r", 10)
     .attr("fill", "black")
     .call(drag)
 
-
-//   .on("dragstart", function () {
-//     console.log(arguments);
-//   })
-
-
-
-// // experiment
-
-
-
-// var renderEnemeies(enemyArray) {
-//     var svg = d3.select("body") 
-//     .append("svg")
-//     .attr("width", 600)
-//     .attr("height", 600);
-//     .data(enemyArray, function(d) {
-//         d.id
-//     })
-//     .enter().
-//     .attr("r", 5 + "px")
-//     .attr("fill","blue")
-//     .transition().each("end", function () {
-//             myTransf();
-//         });
-//     .append()
-// }
+var increaseScore = function() {
+      gameStats.score += 1;
+      return updateScore();
+    };
+setInterval(increaseScore, 50);
